@@ -71,9 +71,6 @@ export default function WhopCheckoutPage() {
     if (!formData.companyWebsite) {
       errors.companyWebsite = "Sito web aziendale è obbligatorio.";
       isValid = false;
-    } else if (!/\\./.test(formData.companyWebsite)) { // Basic check: contains a dot
-       errors.companyWebsite = "Formato URL non valido (es: madani.agency).";
-       isValid = false;
     }
      // Add check for Company Logo URL
     if (!formData.companyLogoUrl) {
