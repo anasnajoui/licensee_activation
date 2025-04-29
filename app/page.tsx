@@ -33,6 +33,7 @@ interface FormData {
 }
 
 interface FormErrors {
+  companyName?: string;
   firstName?: string;
   lastName?: string;
   email?: string;
@@ -60,6 +61,30 @@ export default function WhopCheckoutPage() {
   const validateForm = (): boolean => {
     const errors: FormErrors = {};
     let isValid = true;
+
+    // Add check for Company Name
+    if (!formData.companyName) {
+      errors.companyName = "Nome agenzia è obbligatorio.";
+      isValid = false;
+    }
+    // Add check for Company Website
+    if (!formData.companyWebsite) {
+      errors.companyWebsite = "Sito web aziendale è obbligatorio.";
+      isValid = false;
+    } else if (!/^https?:\/\/.+/.test(formData.companyWebsite)) { // Basic URL format check
+       errors.companyWebsite = "Formato URL non valido.";
+       isValid = false;
+    }
+     // Add check for Company Logo URL
+    if (!formData.companyLogoUrl) {
+      errors.companyLogoUrl = "URL Logo aziendale è obbligatorio.";
+      isValid = false;
+    } else if (!/^https?:\/\/.+\.(jpg|jpeg|png|gif|svg|webp)$/i.test(formData.companyLogoUrl)) { // Basic image URL format check
+       errors.companyLogoUrl = "URL logo non valido (deve essere un link diretto a un'immagine).";
+       isValid = false;
+    }
+
+    // Existing checks
     if (!formData.firstName) {
       errors.firstName = 'Nome è obbligatorio.';
       isValid = false;
@@ -82,6 +107,7 @@ export default function WhopCheckoutPage() {
       errors.phone = 'Inserisci un numero di telefono valido (9-10 cifre).';
       isValid = false;
     }
+
     setFormErrors(errors);
     return isValid;
   };
@@ -210,18 +236,21 @@ export default function WhopCheckoutPage() {
             {/* Input Fields */} 
             {/* Company Name */}
             <div className="space-y-2">
-              <Label htmlFor="companyName" className="text-xs sm:text-sm font-medium text-muted-foreground">Nome dell&apos;agenzia <span className="text-xs">(facoltativo)</span></Label>
-              <Input id="companyName" name="companyName" placeholder="es. Madani Corp" value={formData.companyName} onChange={handleInputChange} className="bg-input border-border placeholder-muted-foreground/50 focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] text-sm sm:text-base" disabled={isLoading} />
+              <Label htmlFor="companyName" className="text-xs sm:text-sm font-medium text-muted-foreground">Nome dell&apos;agenzia*</Label>
+              <Input id="companyName" name="companyName" placeholder="es. Madani Corp" required value={formData.companyName} onChange={handleInputChange} className={cn("bg-input border-border placeholder-muted-foreground/50 focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] text-sm sm:text-base", formErrors.companyName && "border-destructive focus:ring-destructive focus:border-destructive")} aria-invalid={!!formErrors.companyName} aria-describedby={formErrors.companyName ? "companyName-error" : undefined} disabled={isLoading} />
+              {formErrors.companyName && <p id="companyName-error" className="text-xs text-destructive mt-1">{formErrors.companyName}</p>}
             </div>
             {/* Company Website */}
             <div className="space-y-2">
-              <Label htmlFor="companyWebsite" className="text-xs sm:text-sm font-medium text-muted-foreground">Sito web aziendale <span className="text-xs">(facoltativo)</span></Label>
-              <Input id="companyWebsite" name="companyWebsite" type="url" placeholder="https://madani.agency" value={formData.companyWebsite} onChange={handleInputChange} className="bg-input border-border placeholder-muted-foreground/50 focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] text-sm sm:text-base" disabled={isLoading} />
+              <Label htmlFor="companyWebsite" className="text-xs sm:text-sm font-medium text-muted-foreground">Sito web aziendale*</Label>
+              <Input id="companyWebsite" name="companyWebsite" type="url" placeholder="https://madani.agency" required value={formData.companyWebsite} onChange={handleInputChange} className={cn("bg-input border-border placeholder-muted-foreground/50 focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] text-sm sm:text-base", formErrors.companyWebsite && "border-destructive focus:ring-destructive focus:border-destructive")} aria-invalid={!!formErrors.companyWebsite} aria-describedby={formErrors.companyWebsite ? "companyWebsite-error" : undefined} disabled={isLoading} />
+              {formErrors.companyWebsite && <p id="companyWebsite-error" className="text-xs text-destructive mt-1">{formErrors.companyWebsite}</p>}
             </div>
             {/* Company Logo URL */}
             <div className="space-y-2">
-              <Label htmlFor="companyLogoUrl" className="text-xs sm:text-sm font-medium text-muted-foreground">URL Logo aziendale <span className="text-xs">(facoltativo)</span></Label>
-              <Input id="companyLogoUrl" name="companyLogoUrl" type="url" placeholder="https://madani.agency/logo.png" value={formData.companyLogoUrl} onChange={handleInputChange} className="bg-input border-border placeholder-muted-foreground/50 focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] text-sm sm:text-base" disabled={isLoading} />
+              <Label htmlFor="companyLogoUrl" className="text-xs sm:text-sm font-medium text-muted-foreground">URL Logo aziendale*</Label>
+              <Input id="companyLogoUrl" name="companyLogoUrl" type="url" placeholder="https://madani.agency/logo.png" required value={formData.companyLogoUrl} onChange={handleInputChange} className={cn("bg-input border-border placeholder-muted-foreground/50 focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] text-sm sm:text-base", formErrors.companyLogoUrl && "border-destructive focus:ring-destructive focus:border-destructive")} aria-invalid={!!formErrors.companyLogoUrl} aria-describedby={formErrors.companyLogoUrl ? "companyLogoUrl-error" : undefined} disabled={isLoading} />
+              {formErrors.companyLogoUrl && <p id="companyLogoUrl-error" className="text-xs text-destructive mt-1">{formErrors.companyLogoUrl}</p>}
             </div>
 
             {/* SPLIT NAME FIELDS */} 
