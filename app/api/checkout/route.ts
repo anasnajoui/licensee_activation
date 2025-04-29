@@ -54,6 +54,8 @@ export async function POST(request: NextRequest) {
           // Add the new optional fields
           companyWebsite: formData.companyWebsite || '', // Send empty string if not provided
           companyLogoUrl: formData.companyLogoUrl || '', // Send empty string if not provided
+          // Add the new hardcoded field
+          form: "licensee start + setup fee", 
         },
         // redirect_url: 'YOUR_SUCCESS_URL' 
       }),
