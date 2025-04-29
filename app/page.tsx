@@ -79,9 +79,6 @@ export default function WhopCheckoutPage() {
     if (!formData.companyLogoUrl) {
       errors.companyLogoUrl = "URL Logo aziendale è obbligatorio.";
       isValid = false;
-    } else if (!/\\./.test(formData.companyLogoUrl)) { // Basic check: contains a dot
-       errors.companyLogoUrl = "URL logo non valido (es: madani.agency/logo.png).";
-       isValid = false;
     }
 
     // Existing checks
