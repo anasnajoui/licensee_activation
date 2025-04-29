@@ -249,6 +249,9 @@ export default function WhopCheckoutPage() {
             {/* Company Logo URL */}
             <div className="space-y-2">
               <Label htmlFor="companyLogoUrl" className="text-xs sm:text-sm font-medium text-muted-foreground">URL Logo aziendale*</Label>
+              <p className="text-xs text-muted-foreground/80">
+                Non hai un link diretto? Carica il logo su <a href="https://imgbb.com/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">ImgBB.com</a> e incolla qui il "Link diretto".
+              </p>
               <Input id="companyLogoUrl" name="companyLogoUrl" type="url" placeholder="https://madani.agency/logo.png" required value={formData.companyLogoUrl} onChange={handleInputChange} className={cn("bg-input border-border placeholder-muted-foreground/50 focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] text-sm sm:text-base", formErrors.companyLogoUrl && "border-destructive focus:ring-destructive focus:border-destructive")} aria-invalid={!!formErrors.companyLogoUrl} aria-describedby={formErrors.companyLogoUrl ? "companyLogoUrl-error" : undefined} disabled={isLoading} />
               {formErrors.companyLogoUrl && <p id="companyLogoUrl-error" className="text-xs text-destructive mt-1">{formErrors.companyLogoUrl}</p>}
             </div>
