@@ -1,0 +1,123 @@
+@import "tailwindcss";
+@import "tw-animate-css"; /* Keep if used */
+
+/* Define theme variables within the base layer */
+@layer base {
+  :root {
+    /* Dark theme variables - slightly adjusted */
+    --background: 240 10% 2.9%; /* Even darker background */
+    --foreground: 0 0% 98%; 
+
+    --card: 240 5% 12%; /* Slightly lighter card for glass */
+    --card-foreground: 0 0% 95%;
+
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 75% 55%; /* Slightly adjusted destructive red */
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 4% 25%; /* Subtle border */
+    --input: 240 4% 18%; /* Slightly distinct input background */
+    --input-foreground: 0 0% 90%;
+
+    --ring: 350 90% 55%; /* Neon red for ring */
+
+    --radius: 0.75rem;
+
+    /* Neon Red Components */
+    --neon-red-hue: 350;
+    --neon-red-saturation: 100%;
+    --neon-red-lightness: 55%; /* Slightly brighter neon red */
+    --neon-red: var(--neon-red-hue) var(--neon-red-saturation) var(--neon-red-lightness);
+  }
+
+  /* Apply base styles using direct CSS */
+  * {
+    /* Removed default border */
+    /* border-width: 1px; */
+    /* border-style: solid; */
+    /* border-color: hsl(var(--border)); */
+  }
+  body {
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--background));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Define utility classes */
+@layer utilities {
+  .text-glow-neon-red {
+    color: hsl(var(--neon-red));
+    text-shadow: 0 0 8px hsl(var(--neon-red) / 0.7),
+                 0 0 15px hsl(var(--neon-red) / 0.5),
+                 0 0 25px hsl(var(--neon-red) / 0.3);
+  }
+
+  .glass-effect {
+    background-color: hsla(var(--card), 0.7); /* Slightly more opaque card */
+    @apply backdrop-blur-xl; /* Increased blur */
+    /* Subtle border with neon hint */
+    border: 1px solid hsla(var(--neon-red-hue), var(--neon-red-saturation), 100%, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); /* Stronger shadow */
+  }
+
+  /* Neon Button Style - Always Bright */
+  .btn-neon {
+     @apply w-full inline-flex items-center justify-center px-6 py-2.5 text-base font-semibold rounded-lg transition-shadow duration-300 ease-in-out disabled:opacity-50;
+     /* Always bright neon red background, black text */
+     background-color: hsl(var(--neon-red));
+     color: black;
+     border: 1px solid hsl(var(--neon-red)); /* Use solid neon red border */
+     /* Apply the brighter shadow as default */
+     box-shadow: 0 0 15px hsl(var(--neon-red) / 0.6), 
+                 inset 0 0 10px hsl(var(--neon-red) / 0.4);
+  }
+  /* Remove the hover state that changed colors */
+  /* .btn-neon:not(:disabled):hover {
+     background-color: hsl(var(--neon-red)); 
+     color: black;
+     box-shadow: 0 0 15px hsl(var(--neon-red) / 0.6), 
+                 inset 0 0 10px hsl(var(--neon-red) / 0.4);
+     border-color: hsl(var(--neon-red));
+  } */
+
+  /* Optional: Add a subtle hover effect for feedback (e.g., slightly brighter shadow) */
+   .btn-neon:not(:disabled):hover {
+      box-shadow: 0 0 20px hsl(var(--neon-red) / 0.8), 
+                 inset 0 0 12px hsl(var(--neon-red) / 0.5);
+   }
+
+  /* Other utilities like .pulse-indicator */
+   @keyframes pulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(255, 165, 0, 0.7);
+    }
+    50% {
+      box-shadow: 0 0 0 8px rgba(255, 165, 0, 0);
+    }
+  }
+   .pulse-indicator {
+    /* @apply inline-block w-2 h-2 bg-orange-400 rounded-full; */ /* Replaced @apply */
+    display: inline-block;
+    width: 0.5rem; /* Equivalent to w-2 */
+    height: 0.5rem; /* Equivalent to h-2 */
+    background-color: #fb923c; /* bg-orange-400 */
+    border-radius: 9999px; /* rounded-full */
+    animation: pulse 1.5s infinite cubic-bezier(0.66, 0, 0, 1);
+  }
+}
