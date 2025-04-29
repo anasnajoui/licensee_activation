@@ -71,16 +71,16 @@ export default function WhopCheckoutPage() {
     if (!formData.companyWebsite) {
       errors.companyWebsite = "Sito web aziendale è obbligatorio.";
       isValid = false;
-    } else if (!/^https?:\/\/.+/.test(formData.companyWebsite)) { // Basic URL format check
-       errors.companyWebsite = "Formato URL non valido.";
+    } else if (!/\\./.test(formData.companyWebsite)) { // Basic check: contains a dot
+       errors.companyWebsite = "Formato URL non valido (es: madani.agency).";
        isValid = false;
     }
      // Add check for Company Logo URL
     if (!formData.companyLogoUrl) {
       errors.companyLogoUrl = "URL Logo aziendale è obbligatorio.";
       isValid = false;
-    } else if (!/^https?:\/\/.+\.(jpg|jpeg|png|gif|svg|webp)$/i.test(formData.companyLogoUrl)) { // Basic image URL format check
-       errors.companyLogoUrl = "URL logo non valido (deve essere un link diretto a un'immagine).";
+    } else if (!/\\./.test(formData.companyLogoUrl)) { // Basic check: contains a dot
+       errors.companyLogoUrl = "URL logo non valido (es: madani.agency/logo.png).";
        isValid = false;
     }
 
