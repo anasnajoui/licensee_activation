@@ -8,6 +8,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { cn } from '../lib/utils';
 import { RefreshCw, Lock, XCircle } from 'lucide-react';
+import { Switch } from "@/components/ui/switch";
 
 // Helper function to format phone number
 const formatPhoneNumber = (digits: string): string => {
@@ -30,6 +31,7 @@ interface FormData {
   rawPhone: string;
   companyWebsite: string;
   companyLogoUrl: string;
+  licenseeId: string;
 }
 
 interface FormErrors {
@@ -40,11 +42,13 @@ interface FormErrors {
   phone?: string;
   companyWebsite?: string;
   companyLogoUrl?: string;
+  licenseeId?: string;
   general?: string;
 }
 
 export default function WhopCheckoutPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [isExistingLicensee, setIsExistingLicensee] = useState(false);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [formData, setFormData] = useState<FormData>({
     companyName: '',
@@ -54,6 +58,7 @@ export default function WhopCheckoutPage() {
     rawPhone: '',
     companyWebsite: '',
     companyLogoUrl: '',
+    licenseeId: '',
   });
   const [submissionMessage, setSubmissionMessage] = useState<string | null>(null);
 
@@ -62,44 +67,46 @@ export default function WhopCheckoutPage() {
     const errors: FormErrors = {};
     let isValid = true;
 
-    // Add check for Company Name
-    if (!formData.companyName) {
-      errors.companyName = "Nome agenzia è obbligatorio.";
-      isValid = false;
-    }
-    // Add check for Company Website
-    if (!formData.companyWebsite) {
-      errors.companyWebsite = "Sito web aziendale è obbligatorio.";
-      isValid = false;
-    }
-     // Add check for Company Logo URL
-    if (!formData.companyLogoUrl) {
-      errors.companyLogoUrl = "URL Logo aziendale è obbligatorio.";
-      isValid = false;
-    }
-
-    // Existing checks
-    if (!formData.firstName) {
-      errors.firstName = 'Nome è obbligatorio.';
-      isValid = false;
-    }
-    if (!formData.lastName) {
-      errors.lastName = 'Cognome è obbligatorio.';
-      isValid = false;
-    }
-    if (!formData.email) {
-      errors.email = 'Email è obbligatoria.';
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = 'Formato email non valido.';
-      isValid = false;
-    }
-    if (!formData.rawPhone) {
-      errors.phone = 'Numero di telefono è obbligatorio.';
-      isValid = false;
-    } else if (formData.rawPhone.length < 9 || formData.rawPhone.length > 10) {
-      errors.phone = 'Inserisci un numero di telefono valido (9-10 cifre).';
-      isValid = false;
+    if (isExistingLicensee) {
+      if (!formData.licenseeId) {
+        errors.licenseeId = 'ID Licenza è obbligatorio.';
+        isValid = false;
+      }
+    } else {
+      if (!formData.companyName) {
+        errors.companyName = "Nome agenzia è obbligatorio.";
+        isValid = false;
+      }
+      if (!formData.companyWebsite) {
+        errors.companyWebsite = "Sito web aziendale è obbligatorio.";
+        isValid = false;
+      }
+      if (!formData.companyLogoUrl) {
+        errors.companyLogoUrl = "URL Logo aziendale è obbligatorio.";
+        isValid = false;
+      }
+      if (!formData.firstName) {
+        errors.firstName = 'Nome è obbligatorio.';
+        isValid = false;
+      }
+      if (!formData.lastName) {
+        errors.lastName = 'Cognome è obbligatorio.';
+        isValid = false;
+      }
+      if (!formData.email) {
+        errors.email = 'Email è obbligatoria.';
+        isValid = false;
+      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        errors.email = 'Formato email non valido.';
+        isValid = false;
+      }
+      if (!formData.rawPhone) {
+        errors.phone = 'Numero di telefono è obbligatorio.';
+        isValid = false;
+      } else if (formData.rawPhone.length < 9 || formData.rawPhone.length > 10) {
+        errors.phone = 'Inserisci un numero di telefono valido (9-10 cifre).';
+        isValid = false;
+      }
     }
 
     setFormErrors(errors);
@@ -130,6 +137,15 @@ export default function WhopCheckoutPage() {
     }
   };
 
+  const handleToggleChange = (checked: boolean) => {
+    setIsExistingLicensee(checked);
+    setFormErrors({});
+    setSubmissionMessage(null);
+    if (!checked) {
+      setFormData((prev) => ({ ...prev, licenseeId: '' }));
+    }
+  };
+
   // Submit handler
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -139,43 +155,77 @@ export default function WhopCheckoutPage() {
     setIsLoading(true);
     setSubmissionMessage(null);
     setFormErrors({});
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate delay
-    const submissionData = {
-      companyName: formData.companyName,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      phone: formData.rawPhone,
-      companyWebsite: formData.companyWebsite,
-      companyLogoUrl: formData.companyLogoUrl,
-    };
-    try {
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submissionData),
-      });
-      const result = await response.json();
-      if (!response.ok) {
-        setFormErrors({ general: result.error || 'Si è verificato un errore sconosciuto.' });
-        throw new Error(result.error || 'Si è verificato un errore sconosciuto.');
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    if (isExistingLicensee) {
+      const submissionData = {
+        ...formData,
+        isClientActivation: true
+      };
+      try {
+        const response = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(submissionData),
+        });
+        const result = await response.json();
+
+        if (!response.ok) {
+          setFormErrors({ general: result.error || 'Errore durante l\'attivazione del cliente.' });
+          throw new Error(result.error || 'Errore durante l\'attivazione del cliente.');
+        }
+
+        if (result.purchase_url) {
+          setSubmissionMessage('Cliente attivato con successo! Verrai reindirizzato...');
+          window.location.href = result.purchase_url;
+        } else {
+          setSubmissionMessage(result.message || 'Cliente attivato con successo!');
+        }
+      } catch (err: unknown) {
+        console.error('Client activation error:', err);
+        let message = 'Impossibile attivare il cliente.';
+        if (err instanceof Error) {
+          message = err.message;
+        }
+        setFormErrors((prev) => ({ ...prev, general: message }));
+      } finally {
+        if (!submissionMessage?.includes('reindirizzato')) {
+           setIsLoading(false);
+        }
       }
-      if (result.purchase_url) {
-        setSubmissionMessage('Verrai reindirizzato alla pagina di pagamento...');
-        window.location.href = result.purchase_url;
-      } else {
-        setFormErrors({ general: 'URL di acquisto non ricevuto.' });
-        throw new Error('URL di acquisto non ricevuto.');
+    } else {
+      const { licenseeId, ...submissionData } = formData;
+      try {
+        const response = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(submissionData),
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          setFormErrors({ general: result.error || 'Si è verificato un errore sconosciuto.' });
+          throw new Error(result.error || 'Si è verificato un errore sconosciuto.');
+        }
+        if (result.purchase_url) {
+          setSubmissionMessage('Verrai reindirizzato alla pagina di pagamento...');
+          window.location.href = result.purchase_url;
+        } else {
+          setFormErrors({ general: 'URL di acquisto non ricevuto.' });
+          throw new Error('URL di acquisto non ricevuto.');
+        }
+      } catch (err: unknown) {
+        console.error('Form submission error:', err);
+        let message = 'Impossibile elaborare la richiesta.';
+        if (err instanceof Error) {
+          message = err.message;
+        }
+        setFormErrors((prev) => ({ ...prev, general: message }));
+        setSubmissionMessage(null);
+      } finally {
+        if (!submissionMessage?.includes('reindirizzato')) {
+           setIsLoading(false);
+        }
       }
-    } catch (err: unknown) {
-      console.error('Form submission error:', err);
-      let message = 'Impossibile elaborare la richiesta.';
-      if (err instanceof Error) {
-        message = err.message;
-      }
-      setFormErrors((prev) => ({ ...prev, general: message }));
-      setIsLoading(false);
-      setSubmissionMessage(null);
     }
   };
 
@@ -207,15 +257,40 @@ export default function WhopCheckoutPage() {
 
         {/* Form Container with Enhanced Glass Effect */} 
         <div className="glass-effect rounded-xl p-6 sm:p-8 w-full max-w-lg">
-          {/* Neon Red Title - REMOVED */}
-          {/* 
-          <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center text-glow-neon-red">
-            Licensee Activation
+          {/* Conditional Neon Title with specific color #FB6248 */}
+          <h1 className={cn(
+            "text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center",
+            "text-[#FB6248] [text-shadow:0_0_12px_#FB6248aa]" // Use specific hex code and adjust shadow
+            )}>
+             {isExistingLicensee ? 'Attiva il tuo cliente' : 'Diventa Licensee'}
           </h1>
-          */}
 
           <form onSubmit={handleSubmit} noValidate className="space-y-5 sm:space-y-6">
-            {/* Error/Submission Messages */} 
+            {/* Mode Toggle Switch with specific color #FB6248 */}
+            <div className="flex items-center justify-between space-x-2 pb-4 border-b border-white/10 mb-4">
+              <Label
+                htmlFor="existingLicenseeToggle"
+                className={cn(
+                  "text-sm font-medium leading-none text-muted-foreground cursor-pointer transition-colors",
+                  isExistingLicensee && "text-[#FB6248]" // Label color when active
+                )}
+              >
+                Vuoi attivare un cliente? Attivalo qui.
+              </Label>
+              <Switch
+                id="existingLicenseeToggle"
+                checked={isExistingLicensee}
+                onCheckedChange={handleToggleChange}
+                disabled={isLoading}
+                className={cn(
+                  "data-[state=unchecked]:bg-input",
+                  "data-[state=checked]:bg-[#FB6248]", // Use specific hex code for checked background
+                  "focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                  "focus-visible:ring-[#FB6248]" // Use specific hex code for focus ring
+                )}
+              />
+            </div>
+
             {formErrors.general && (
                 <div className="p-3 text-sm text-red-200 rounded-lg bg-destructive/20 border border-destructive/50" role="alert">
                   <span className="font-medium">Errore:</span> {formErrors.general}
@@ -227,20 +302,39 @@ export default function WhopCheckoutPage() {
                 </div>
             )}
 
-            {/* Input Fields */} 
-            {/* Company Name */}
+            <div className={cn("space-y-2", !isExistingLicensee && "opacity-50")}>
+              <Label htmlFor="licenseeId" className={cn("text-xs sm:text-sm font-medium text-muted-foreground", !isExistingLicensee && "text-muted-foreground/70")}>
+                ID Licenza {isExistingLicensee ? '*' : ''}
+              </Label>
+              <Input
+                id="licenseeId"
+                name="licenseeId"
+                placeholder="Il tuo ID Licenza esistente"
+                required={isExistingLicensee}
+                value={formData.licenseeId}
+                onChange={handleInputChange}
+                className={cn(
+                  "bg-input border-border placeholder-muted-foreground/50 focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] text-sm sm:text-base",
+                  formErrors.licenseeId && "border-destructive focus:ring-destructive focus:border-destructive",
+                  !isExistingLicensee && "cursor-not-allowed border-border/50"
+                )}
+                aria-invalid={!!formErrors.licenseeId}
+                aria-describedby={formErrors.licenseeId ? "licenseeId-error" : undefined}
+                disabled={isLoading || !isExistingLicensee}
+              />
+              {isExistingLicensee && formErrors.licenseeId && <p id="licenseeId-error" className="text-xs text-destructive mt-1">{formErrors.licenseeId}</p>}
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="companyName" className="text-xs sm:text-sm font-medium text-muted-foreground">Nome dell&apos;agenzia*</Label>
               <Input id="companyName" name="companyName" placeholder="es. Madani Corp" required value={formData.companyName} onChange={handleInputChange} className={cn("bg-input border-border placeholder-muted-foreground/50 focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] text-sm sm:text-base", formErrors.companyName && "border-destructive focus:ring-destructive focus:border-destructive")} aria-invalid={!!formErrors.companyName} aria-describedby={formErrors.companyName ? "companyName-error" : undefined} disabled={isLoading} />
               {formErrors.companyName && <p id="companyName-error" className="text-xs text-destructive mt-1">{formErrors.companyName}</p>}
             </div>
-            {/* Company Website */}
             <div className="space-y-2">
               <Label htmlFor="companyWebsite" className="text-xs sm:text-sm font-medium text-muted-foreground">Sito web aziendale*</Label>
               <Input id="companyWebsite" name="companyWebsite" type="url" placeholder="https://madani.agency" required value={formData.companyWebsite} onChange={handleInputChange} className={cn("bg-input border-border placeholder-muted-foreground/50 focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] text-sm sm:text-base", formErrors.companyWebsite && "border-destructive focus:ring-destructive focus:border-destructive")} aria-invalid={!!formErrors.companyWebsite} aria-describedby={formErrors.companyWebsite ? "companyWebsite-error" : undefined} disabled={isLoading} />
               {formErrors.companyWebsite && <p id="companyWebsite-error" className="text-xs text-destructive mt-1">{formErrors.companyWebsite}</p>}
             </div>
-            {/* Company Logo URL */}
             <div className="space-y-2">
               <Label htmlFor="companyLogoUrl" className="text-xs sm:text-sm font-medium text-muted-foreground">URL Logo aziendale*</Label>
               <p className="text-xs text-muted-foreground/80">
@@ -250,15 +344,12 @@ export default function WhopCheckoutPage() {
               {formErrors.companyLogoUrl && <p id="companyLogoUrl-error" className="text-xs text-destructive mt-1">{formErrors.companyLogoUrl}</p>}
             </div>
 
-            {/* SPLIT NAME FIELDS */} 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* First Name */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               <div className="space-y-2">
                 <Label htmlFor="firstName" className="text-xs sm:text-sm font-medium text-muted-foreground">Nome*</Label>
                 <Input id="firstName" name="firstName" placeholder="Mario" required value={formData.firstName} onChange={handleInputChange} className={cn("bg-input border-border placeholder-muted-foreground/50 focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] text-sm sm:text-base", formErrors.firstName && "border-destructive focus:ring-destructive focus:border-destructive")} aria-invalid={!!formErrors.firstName} aria-describedby={formErrors.firstName ? "firstname-error" : undefined} disabled={isLoading} />
                 {formErrors.firstName && <p id="firstname-error" className="text-xs text-destructive mt-1">{formErrors.firstName}</p>}
               </div>
-              {/* Last Name */} 
               <div className="space-y-2">
                 <Label htmlFor="lastName" className="text-xs sm:text-sm font-medium text-muted-foreground">Cognome*</Label>
                 <Input id="lastName" name="lastName" placeholder="Rossi" required value={formData.lastName} onChange={handleInputChange} className={cn("bg-input border-border placeholder-muted-foreground/50 focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] text-sm sm:text-base", formErrors.lastName && "border-destructive focus:ring-destructive focus:border-destructive")} aria-invalid={!!formErrors.lastName} aria-describedby={formErrors.lastName ? "lastname-error" : undefined} disabled={isLoading} />
@@ -266,45 +357,44 @@ export default function WhopCheckoutPage() {
               </div>
             </div>
 
-             {/* Email Field */} 
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-xs sm:text-sm font-medium text-muted-foreground">Email*</Label>
-              <Input id="email" name="email" type="email" placeholder="mario.rossi@email.com" required value={formData.email} onChange={handleInputChange} className={cn("bg-input border-border placeholder-muted-foreground/50 focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] text-sm sm:text-base", formErrors.email && "border-destructive focus:ring-destructive focus:border-destructive")} aria-invalid={!!formErrors.email} aria-describedby={formErrors.email ? "email-error" : undefined} disabled={isLoading} />
-              {formErrors.email && <p id="email-error" className="text-xs text-destructive mt-1">{formErrors.email}</p>}
-            </div>
-
-            {/* Phone Field */} 
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="text-xs sm:text-sm font-medium text-muted-foreground">Numero di telefono*</Label>
-              <div className="flex items-center">
-                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-border bg-muted text-muted-foreground text-xs sm:text-sm h-9 sm:h-10">+39</span>
-                <Input id="phone" name="phone" type="tel" inputMode="numeric" placeholder="123 456 7890" required value={formatPhoneNumber(formData.rawPhone)} onChange={handlePhoneInput} className={cn("flex-1 bg-input border-border placeholder-muted-foreground/50 focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] rounded-l-none text-sm sm:text-base h-9 sm:h-10", formErrors.phone && "border-destructive focus:ring-destructive focus:border-destructive")} aria-invalid={!!formErrors.phone} aria-describedby={formErrors.phone ? "phone-error" : undefined} disabled={isLoading} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-xs sm:text-sm font-medium text-muted-foreground">Email*</Label>
+                <Input id="email" name="email" type="email" placeholder="mario.rossi@email.com" required value={formData.email} onChange={handleInputChange} className={cn("bg-input border-border placeholder-muted-foreground/50 focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] text-sm sm:text-base", formErrors.email && "border-destructive focus:ring-destructive focus:border-destructive")} aria-invalid={!!formErrors.email} aria-describedby={formErrors.email ? "email-error" : undefined} disabled={isLoading} />
+                {formErrors.email && <p id="email-error" className="text-xs text-destructive mt-1">{formErrors.email}</p>}
               </div>
-              {formErrors.phone && <p id="phone-error" className="text-xs text-destructive mt-1">{formErrors.phone}</p>}
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-xs sm:text-sm font-medium text-muted-foreground">Numero di telefono*</Label>
+                <div className="flex items-center">
+                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-border bg-muted text-muted-foreground text-xs sm:text-sm h-9 sm:h-10">+39</span>
+                  <Input id="phone" name="phone" type="tel" inputMode="numeric" placeholder="123 456 7890" required value={formatPhoneNumber(formData.rawPhone)} onChange={handlePhoneInput} className={cn("flex-1 bg-input border-border placeholder-muted-foreground/50 focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] rounded-l-none text-sm sm:text-base h-9 sm:h-10", formErrors.phone && "border-destructive focus:ring-destructive focus:border-destructive")} aria-invalid={!!formErrors.phone} aria-describedby={formErrors.phone ? "phone-error" : undefined} disabled={isLoading} />
+                </div>
+                {formErrors.phone && <p id="phone-error" className="text-xs text-destructive mt-1">{formErrors.phone}</p>}
+              </div>
             </div>
 
-            {/* Submit Button */} 
-            <div className="pt-4 sm:pt-6">
-              <Button type="submit" className="btn-neon" disabled={isLoading || (!!submissionMessage && !formErrors.general)} >
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className={cn(
+                "w-full text-white font-semibold py-2.5 sm:py-3 text-sm sm:text-base rounded-md shadow-md transition duration-300 ease-in-out transform hover:scale-105 relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed",
+                "bg-[#FB6248] hover:bg-[#E05840]", // Use specific hex code for bg, maybe slightly darker on hover
+                "shadow-[0_0_18px_#FB624888] hover:shadow-[0_0_22px_#FB6248aa]" // Use specific hex code for shadow halo, enhance on hover
+              )}
+             >
+                <span className="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-all duration-700 ease-in-out group-hover:left-[100%]"></span>
                 {isLoading ? (
                     <>
-                      <RefreshCw className="animate-spin h-4 w-4 mr-2" />
-                      Elaborazione...
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      {isExistingLicensee ? 'Attivazione Cliente...' : 'Attivazione Licenza...'}
                     </>
                 ) : (
-                    "Attiva Licenza"
+                    <>
+                      <Lock className="mr-2 h-4 w-4" />
+                      {isExistingLicensee ? 'Attiva Cliente' : 'Attiva Licenza'}
+                    </>
                 )}
-              </Button>
-            </div>
-
-             {/* Security Footer */} 
-            <div className="text-center w-full pt-2 sm:pt-4">
-              <div className="flex items-center justify-center gap-2 sm:gap-3 text-xs text-muted-foreground/80">
-                <span className="flex items-center gap-1"><Lock className="h-3 w-3"/> Pagamento sicuro</span>
-                <span>|</span>
-                <span className="flex items-center gap-1"><XCircle className="h-3 w-3"/> Dati protetti</span>
-              </div>
-            </div>
+             </Button>
           </form>
         </div>
       </main>

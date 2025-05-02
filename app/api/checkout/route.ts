@@ -2,15 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   const whopApiKey = process.env.WHOP_API_KEY;
-  const whopPlanId = process.env.WHOP_PLAN_ID;
 
   if (!whopApiKey) {
     console.error('Whop API Key is not configured.');
     return NextResponse.json({ error: 'Server configuration error: Missing API Key.' }, { status: 500 });
-  }
-  if (!whopPlanId) {
-    console.error('Whop Plan ID is not configured.');
-    return NextResponse.json({ error: 'Server configuration error: Missing Plan ID.' }, { status: 500 });
   }
 
   try {
@@ -27,37 +22,63 @@ export async function POST(request: NextRequest) {
         throw new Error('Invalid JSON format received from client.'); 
     }
 
-    // Basic validation (check new fields)
-    if (!formData.companyName || !formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
-      console.log("Validation failed: Missing required fields (firstName, lastName, email, phone).") // Updated log
+    // Determine flow type
+    const isClientActivation = formData.isClientActivation === true;
+    console.log(`Processing request as: ${isClientActivation ? 'Client Activation' : 'New Licensee'}`);
+
+    // Select Plan ID based on flow
+    const planId = isClientActivation ? process.env.WHOP_PLAN_ID2 : process.env.WHOP_PLAN_ID;
+    const planIdName = isClientActivation ? 'WHOP_PLAN_ID2' : 'WHOP_PLAN_ID';
+
+    if (!planId) {
+      console.error(`${planIdName} is not configured in environment variables.`);
+      return NextResponse.json({ error: `Server configuration error: Missing ${planIdName}.` }, { status: 500 });
+    }
+    console.log(`Using Plan ID: ${planId} (from ${planIdName})`);
+
+    // Basic validation (check base required fields for both flows)
+    if (!formData.companyName || !formData.firstName || !formData.lastName || !formData.email || !formData.rawPhone) {
+      console.log("Validation failed: Missing required base fields (using rawPhone for check).")
       return NextResponse.json({ error: 'Missing required form fields.' }, { status: 400 });
     }
 
-    console.log("Calling Whop API...");
+    // Additional validation for client activation
+    if (isClientActivation && !formData.licenseeId) {
+        console.log("Validation failed: Missing licenseeId for client activation.")
+        return NextResponse.json({ error: 'Missing Licensee ID for client activation.' }, { status: 400 });
+    }
+
+    // Prepare metadata conditionally
+    const metadata: Record<string, any> = {
+      companyName: formData.companyName,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      phone: `+39${formData.rawPhone}`,
+      companyWebsite: formData.companyWebsite || '',
+      companyLogoUrl: formData.companyLogoUrl || '',
+      form: isClientActivation ? "client activation" : "licensee start + setup fee", // Conditional form type
+    };
+
+    // Add licenseeId to metadata only if activating a client
+    if (isClientActivation) {
+        metadata.licenseeId = formData.licenseeId;
+    }
+
+    console.log("Prepared Metadata:", metadata);
+    console.log("Calling Whop API with Plan ID:", planId);
     const whopApiUrl = 'https://api.whop.com/api/v2/checkout_sessions';
 
     const response = await fetch(whopApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': whopApiKey, 
+        'Authorization': whopApiKey,
       },
       body: JSON.stringify({
-        plan_id: whopPlanId,
-        metadata: {
-          companyName: formData.companyName,
-          // Send split names instead of fullName
-          firstName: formData.firstName, 
-          lastName: formData.lastName,   
-          email: formData.email,
-          phone: `+39${formData.phone}`, // Assume +39 prefix based on frontend format
-          // Add the new optional fields
-          companyWebsite: formData.companyWebsite || '', // Send empty string if not provided
-          companyLogoUrl: formData.companyLogoUrl || '', // Send empty string if not provided
-          // Add the new hardcoded field
-          form: "licensee start + setup fee", 
-        },
-        // redirect_url: 'YOUR_SUCCESS_URL' 
+        plan_id: planId, // Use the conditionally selected plan ID
+        metadata: metadata, // Use the prepared metadata
+        // redirect_url: 'YOUR_SUCCESS_URL'
       }),
     });
     
