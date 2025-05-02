@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Missing Licensee ID for client activation.' }, { status: 400 });
     }
 
-    // Prepare metadata conditionally
+    // Prepare metadata
     const metadata: Record<string, any> = {
       companyName: formData.companyName,
       firstName: formData.firstName,
@@ -57,13 +57,9 @@ export async function POST(request: NextRequest) {
       phone: `+39${formData.rawPhone}`,
       companyWebsite: formData.companyWebsite || '',
       companyLogoUrl: formData.companyLogoUrl || '',
-      form: isClientActivation ? "client activation" : "licensee start + setup fee", // Conditional form type
+      licenseeId: formData.licenseeId, // Always include licenseeId
+      form: isClientActivation ? "client activation" : "licensee start + setup fee",
     };
-
-    // Add licenseeId to metadata only if activating a client
-    if (isClientActivation) {
-        metadata.licenseeId = formData.licenseeId;
-    }
 
     console.log("Prepared Metadata:", metadata);
     console.log("Calling Whop API with Plan ID:", planId);
