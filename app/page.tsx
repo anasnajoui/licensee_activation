@@ -302,28 +302,40 @@ export default function WhopCheckoutPage() {
                 </div>
             )}
 
-            <div className={cn("space-y-2", !isExistingLicensee && "opacity-50")}>
-              <Label htmlFor="licenseeId" className={cn("text-xs sm:text-sm font-medium text-muted-foreground", !isExistingLicensee && "text-muted-foreground/70")}>
-                ID Licenza {isExistingLicensee ? '*' : ''}
-              </Label>
-              <Input
-                id="licenseeId"
-                name="licenseeId"
-                placeholder="Il tuo ID Licenza esistente"
-                required={isExistingLicensee}
-                value={formData.licenseeId}
-                onChange={handleInputChange}
-                className={cn(
-                  "bg-input border-border placeholder-muted-foreground/50 focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-[hsl(var(--ring))] text-sm sm:text-base",
-                  formErrors.licenseeId && "border-destructive focus:ring-destructive focus:border-destructive",
-                  !isExistingLicensee && "cursor-not-allowed border-border/50"
-                )}
-                aria-invalid={!!formErrors.licenseeId}
-                aria-describedby={formErrors.licenseeId ? "licenseeId-error" : undefined}
-                disabled={isLoading || !isExistingLicensee}
-              />
-              {isExistingLicensee && formErrors.licenseeId && <p id="licenseeId-error" className="text-xs text-destructive mt-1">{formErrors.licenseeId}</p>}
-            </div>
+            {/* === Licensee ID Field (Conditionally Enabled/Required) === */}
+             <div className={cn("space-y-2", !isExistingLicensee && "opacity-50")}>
+                {/* Label */}
+                <Label htmlFor="licenseeId" className={cn("text-xs sm:text-sm font-medium text-muted-foreground", !isExistingLicensee && "text-muted-foreground/70")}>
+                  LicenseeID {isExistingLicensee ? '*' : ''}
+                </Label>
+                {/* Description Text (Moved Before Input) */}
+                <p id="licenseeId-description" className={cn("text-xs text-muted-foreground/80", !isExistingLicensee && "text-muted-foreground/50")}>
+                  Il tuo LicenseeID corrisponde al &apos;Location ID&apos; del tuo Sub-Account GoHighLevel.
+                  {' '}
+                  <a href="https://help.gohighlevel.com/support/solutions/articles/48001204848-how-do-i-find-my-client-s-location-id-" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#FB6248] transition-colors">
+                    Scopri come trovarlo qui
+                  </a>.
+                </p>
+                {/* Input Field */}
+                <Input
+                  id="licenseeId"
+                  name="licenseeId"
+                  placeholder="Il tuo LicenseeID esistente"
+                  required={isExistingLicensee}
+                  value={formData.licenseeId}
+                  onChange={handleInputChange}
+                  className={cn(
+                    "bg-input border-border placeholder-muted-foreground/50 focus:ring-1 focus:ring-[#FB6248] focus:border-[#FB6248] text-sm sm:text-base",
+                    formErrors.licenseeId && "border-destructive focus:ring-destructive focus:border-destructive",
+                    !isExistingLicensee && "cursor-not-allowed border-border/50"
+                    )}
+                  aria-invalid={!!formErrors.licenseeId}
+                  aria-describedby={formErrors.licenseeId ? "licenseeId-error" : "licenseeId-description"} // Keep aria-describedby pointing to description
+                  disabled={isLoading || !isExistingLicensee}
+                />
+                {/* Error Message (Remains at the end) */}
+                {isExistingLicensee && formErrors.licenseeId && <p id="licenseeId-error" className="text-xs text-destructive mt-1">{formErrors.licenseeId}</p>}
+              </div>
 
             <div className="space-y-2">
               <Label htmlFor="companyName" className="text-xs sm:text-sm font-medium text-muted-foreground">Nome dell&apos;agenzia*</Label>
