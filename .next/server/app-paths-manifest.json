@@ -1,4 +1,4 @@
 {
-  "/api/checkout/route": "app/api/checkout/route.js",
-  "/page": "app/page.js"
+  "/page": "app/page.js",
+  "/activate/summary/page": "app/activate/summary/page.js"
 }
